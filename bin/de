@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+
+root=$HOME/doom-emacs/volumes
+state=$root/state
+cache=$root/cache
+m2=$root/m2
+
+set -euo pipefail
+
+mkdir -p $root
+
+accept_file=.edit_accept
+reject_file=.edit_reject
+
+find_file() {
+    file="$1"
+    dir="$2"
+
+    if [[ "$dir" != /* ]] ; then
+        dir="$(cd "$dir" && pwd)"
+    fi
+
+    if [[ ! -d "$dir" ]] ; then
+        dir="$(dirname "$dir")"
+    fi
+
+    while [[ "$dir" != "/" && "$dir" != "." ]]; do
+        if [[ -f "${dir}/${file}" ]] ; then
+            echo "$dir"
+            return 0
+        fi
+        dir="$(dirname "$dir")"
+    done
+    echo ""
+}
+
+find_project_root() {
+    local file=""
+    local dir="$1"
+    local -n result="$2"
+    local markers=(".git" "pom.xml" "Cargo.toml" "dub.json" "dub.sdl" "Makefile" "go.mod")
+
+    if [[ "$dir" != /* ]] ; then
+        dir="$(cd "$dir" && pwd)"
+    fi
+
+    if [[ ! -d "$dir" ]] ; then
+        file="$(basename "$dir")"
+        dir="$(dirname "$dir")"
+    fi
+
+    local found=false
+    local start_dir="$dir"
+    local start_file="$file"
+
+    while [[ "$dir" != "/" && "$dir" != "." ]]; do
+        if [[ $found = false ]] ; then
+            for marker in "${markers[@]}"; do
+                if [[ -e "$dir/$marker" ]]; then
+                    found=true
+                    result=("$dir" "$file")
+                fi
+            done
+        fi
+        local f="$(basename "$dir")"
+        dir="$(dirname "$dir")"
+        if [[ "$file" = "" ]] ; then
+            file=$f
+        else
+            file="${f}/${file}"
+        fi
+    done
+
+    if [[ $found = false ]] ; then
+        result=("$start_dir" "$start_file")
+    fi
+    return 0
+}
+
+# Parse options
+enable_network=false
+enable_java=false
+while getopts ":jnh" opt; do
+    case $opt in
+        j) enable_java=true ;;
+        n) enable_network=true ;;
+        h) echo "Usage: $0 [-j] [-n] [filename]"; exit 0 ;;
+        *) echo "Unknown option -$OPTARG" >&2; exit 1 ;;
+    esac
+done
+shift $((OPTIND - 1))
+
+filename="${1:-}"
+shift || true
+
+rejected=$(find_file $reject_file $filename)
+if [[ $rejected != "" ]] ; then
+    echo "Error: editting rejected: $reject_file found in $rejected" >&2
+    exit 1
+fi
+
+accepted=$(find_file $accept_file $filename)
+if [[ $accepted = "" ]] ; then
+    echo "Error: editting denied: no $accept_file found" >&2
+    exit 1
+fi
+
+declare -a dir_file
+find_project_root "$filename" dir_file
+base="${dir_file[0]}"
+file="${dir_file[1]}"
+
+if [[ "$base" != "$HOME"/* ]]; then
+    echo "Error: Must run from within a subdirectory of $HOME" >&2
+    echo "Current: $base" >&2
+    exit 1
+fi
+
+# Build podman args
+podman_args=(
+    --rm -it
+    --name doom-emacs-$$
+    -v $state:/root/.emacs.d/.local/state:rw
+    -v $cache:/root/.cache:rw
+    -v $base:$base:rw
+)
+
+if [[ "$enable_java" = true ]] ; then
+    enable_network=true
+    podman_args+=(-m 4g -v $m2:/root/.m2:rw)
+fi
+
+if [[ "$enable_network" = false ]]; then
+    podman_args+=(--network none)
+fi
+
+if [[ -d ~/org ]] ; then
+  podman_args+=(-v ~/org:/root/org:rw)
+fi
+
+podman_args+=(doom-emacs:latest "$base")
+
+if [[ "$file" != "" ]] ; then
+    podman_args+=("$file" "$@")
+else
+    podman_args+=(.)
+fi
+
+exec podman run "${podman_args[@]}"
