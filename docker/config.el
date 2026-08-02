@@ -97,6 +97,8 @@
 ;;; https://www.orgroam.com/manual.html
 (setq org-roam-directory (file-truename "~/org-roam"))
 (after! org
+  (setq org-id-method 'ts)  ; Use timestamps as UUIDs
+  (setq org-id-ts-format "%Y-%m-%dT%H-%M-%S-%6N")  ; Custom timestamp format
   (org-roam-db-autosync-mode 1))
 
 ;;; My very own key map!
