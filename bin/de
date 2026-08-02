@@ -93,20 +93,21 @@ shift $((OPTIND - 1))
 filename="${1:-}"
 shift || true
 
-rejected=$(find_file $reject_file $filename)
+check_filename="${filename:-.}"
+rejected=$(find_file $reject_file $check_filename)
 if [[ $rejected != "" ]] ; then
     echo "Error: editting rejected: $reject_file found in $rejected" >&2
     exit 1
 fi
 
-accepted=$(find_file $accept_file $filename)
+accepted=$(find_file $accept_file $check_filename)
 if [[ $accepted = "" ]] ; then
     echo "Error: editting denied: no $accept_file found" >&2
     exit 1
 fi
 
 declare -a dir_file
-find_project_root "$filename" dir_file
+find_project_root "$check_filename" dir_file
 base="${dir_file[0]}"
 file="${dir_file[1]}"
 
@@ -146,8 +147,6 @@ podman_args+=(doom-emacs:latest "$base")
 
 if [[ "$file" != "" ]] ; then
     podman_args+=("$file" "$@")
-else
-    podman_args+=(.)
 fi
 
 exec podman run "${podman_args[@]}"
