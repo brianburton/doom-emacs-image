@@ -30,7 +30,7 @@ else
   shift
   file="$1"
   shift
-  
+
   if [[ -f "$file" ]] ; then
     exec emacs -nw "$file" "$@"
   else

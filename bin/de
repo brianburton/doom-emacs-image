@@ -121,6 +121,7 @@ fi
 podman_args=(
     --rm -it
     --name doom-emacs-$$
+    -e TERM="$TERM"
     -v $state:/root/.emacs.d/.local/state:rw
     -v $cache:/root/.cache:rw
     -v $base:$base:rw

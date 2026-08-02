@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y \
     lazygit \
     maven \
     openjdk-25-jdk \
+    pandoc \
     ripgrep \
     sqlite3 \
     unzip \
