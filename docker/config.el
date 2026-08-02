@@ -99,6 +99,10 @@
 (after! org
   (org-roam-db-autosync-mode 1))
 
+;;; My very own key map!
+(map! :leader
+      (:prefix ("z" . "my-custom-keymap")))
+
 ;;; BEGIN clipetty settings
 ;;;
 ;;; Send kill ring contents to system keyboard.
@@ -114,7 +118,7 @@
 ;;; <SPC-Y> triggers the function to copy the kill ring.
 (map! :leader
       :desc "Send kill ring to clipboard"
-      "Y" #'my/clipetty-send-last-kill)
+      "z y" #'my/clipetty-send-last-kill)
 
 ;;; Magic that prevents kill ring from being sent automatically.
 (add-hook! 'doom-first-buffer-hook
@@ -125,3 +129,22 @@
 
 ;;;
 ;;; END clipetty settings
+
+;;;(setq completion-styles '(orderless basic))
+
+
+;;; BEGIN search org-roam files
+;;;
+
+(defun my/consult-ripgrep-org-roam ()
+  "Run consult-ripgrep in org-roam directory."
+  (interactive)
+  (let ((default-directory org-roam-directory))
+    (consult-ripgrep)))
+
+(map! :leader
+      :desc "Ripgrep org-roam"
+      "z r" #'my/consult-ripgrep-org-roam)
+
+;;;
+;;; END search org-roam files
