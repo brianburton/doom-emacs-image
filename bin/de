@@ -7,7 +7,7 @@ m2=$root/m2
 
 set -euo pipefail
 
-mkdir -p $root
+mkdir -p $state $cache $m2
 
 accept_file=.edit_accept
 reject_file=.edit_reject
@@ -136,6 +136,10 @@ fi
 
 if [[ -d ~/org ]] ; then
   podman_args+=(-v ~/org:/root/org:rw)
+fi
+
+if [[ -d ~/org-roam ]] ; then
+  podman_args+=(-v ~/org-roam:/root/org-roam:rw)
 fi
 
 podman_args+=(doom-emacs:latest "$base")

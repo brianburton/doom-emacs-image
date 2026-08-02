@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     emacs-nox \
     fd-find \
+    fonts-symbola \
     fzf \
     gcc \
     git \
@@ -11,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     maven \
     openjdk-25-jdk \
     ripgrep \
-    fonts-symbola \
+    sqlite3 \
     unzip \
     vim \
     wget
