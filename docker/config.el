@@ -42,11 +42,6 @@
 ;; change `org-directory'. It must be set before org loads!
 (setq org-directory "~/org/")
 
-;; org-roam has its own directory
-;; https://www.orgroam.com/manual.html
-(setq org-roam-directory (file-truename "~/org-roam"))
-(after! org
-  (org-roam-db-autosync-mode))
 
 ;; Whenever you reconfigure a package, make sure to wrap your config in an
 ;; `with-eval-after-load' block, otherwise Doom's defaults may override your
@@ -98,3 +93,35 @@
 
 ;; Force ASCII fallbacks
 (setq all-the-icons-disable-fonts t)
+
+;;; https://www.orgroam.com/manual.html
+(setq org-roam-directory (file-truename "~/org-roam"))
+(after! org
+  (org-roam-db-autosync-mode 1))
+
+;;; BEGIN clipetty settings
+;;;
+;;; Send kill ring contents to system keyboard.
+(defun my/clipetty-send-last-kill ()
+  "Send the most recent kill ring entry to the system clipboard via OSC 52."
+  (interactive)
+  (if-let ((text (substring-no-properties (car kill-ring))))
+      (progn
+        (clipetty--emit (clipetty--osc text t))
+        (message "Sent to clipboard"))
+    (message "Kill ring is empty")))
+
+;;; <SPC-Y> triggers the function to copy the kill ring.
+(map! :leader
+      :desc "Send kill ring to clipboard"
+      "Y" #'my/clipetty-send-last-kill)
+
+;;; Magic that prevents kill ring from being sent automatically.
+(add-hook! 'doom-first-buffer-hook
+  (global-clipetty-mode -1)
+  (setq select-enable-clipboard nil)
+  (when (bound-and-true-p xclip-mode)
+    (xclip-mode -1)))
+
+;;;
+;;; END clipetty settings
