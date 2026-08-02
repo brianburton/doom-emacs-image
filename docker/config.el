@@ -101,7 +101,8 @@
 
 ;;; My very own key map!
 (map! :leader
-      (:prefix ("z" . "my-custom-keymap")))
+  (:prefix ("z" . "my-custom-keymap")
+    "t" #'org-roam-dailies-goto-today))
 
 ;;; BEGIN clipetty settings
 ;;;
