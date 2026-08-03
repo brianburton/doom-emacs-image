@@ -31,7 +31,7 @@ else
   file="$1"
   shift
 
-  if [[ -f "$file" ]] ; then
+  if [[ -r "$file" ]] ; then
     exec emacs -nw "$file" "$@"
   else
     echo "error: no such file: $file" 1>&2
