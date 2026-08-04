@@ -111,6 +111,13 @@ find_project_root "$check_filename" dir_file
 base="${dir_file[0]}"
 file="${dir_file[1]}"
 
+rejects=$(fd -HI $reject_file)
+reject_count=$(echo -n $rejects | wc -c)
+if [[ $reject_count -ne 0 ]] ; then
+    echo "Error: editting rejected: $reject_file found $rejects" >&2
+    exit 1
+fi
+
 if [[ "$base" != "$HOME"/* ]]; then
     echo "Error: Must run from within a subdirectory of $HOME" >&2
     echo "Current: $base" >&2
